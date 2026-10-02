@@ -129,10 +129,14 @@ function scrollToOrder() {
 function Index() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
   const [qty, setQty] = useState(1);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+
+  // чим більше штук — тим дешевше кожен клапан
+  const pricePer = (n: number) => (n >= 5 ? 199 : n === 2 ? 250 : 299);
+  const total = pricePer(qty) * qty;
+
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,10 +192,10 @@ function Index() {
             <div className="mt-7 flex flex-wrap items-center gap-4">
               <div>
                 <div className="flex items-baseline gap-3">
-                  <span className="font-display text-5xl font-black text-primary">198</span>
+                  <span className="font-display text-5xl font-black text-primary">299</span>
                   <span className="font-display text-5xl font-black text-primary">₴</span>
                   <span className="text-2xl font-semibold text-muted-foreground line-through">
-                    396 ₴
+                    598 ₴
                   </span>
                 </div>
                 <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -423,8 +427,11 @@ function Index() {
                   Ціна зі знижкою
                 </p>
                 <p className="font-display mt-1 text-5xl font-black text-primary">
-                  198 ₴{" "}
-                  <span className="text-2xl text-muted-foreground line-through">396 ₴</span>
+                  299 ₴{" "}
+                  <span className="text-2xl text-muted-foreground line-through">598 ₴</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  А від 2 шт — <span className="hl">ще вигідніше</span>
                 </p>
               </div>
             </div>
@@ -437,7 +444,7 @@ function Index() {
                 <div className="stock-bar h-full rounded-full" style={{ width: "11%" }} />
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Партія майже розібрана — наступна поставка за старою ціною 396 ₴
+                Партія майже розібрана — наступна поставка за старою ціною 598 ₴
               </p>
             </div>
             <button onClick={scrollToOrder} className="cta-btn mt-9 !text-xl">
@@ -477,7 +484,7 @@ function Index() {
               {
                 name: "Ігор, м. Харків",
                 stars: 5,
-                text: "Скептично ставився до такої дрібнички, але за 198 грн вирішив спробувати. Це найкращі гроші, які я витратив на дім за останній рік. Замовляйте — не пошкодуєте.",
+                text: "Скептично ставився до такої дрібнички, але за 299 грн вирішив спробувати. Це найкращі гроші, які я витратив на дім за останній рік. Замовляйте — не пошкодуєте.",
               },
               {
                 name: "Марина, м. Дніпро",
@@ -557,21 +564,9 @@ function Index() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold" htmlFor="city">
-                    Місто та відділення Нової пошти
-                  </label>
-                  <input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Наприклад: Київ, відділення №1"
-                    className="w-full rounded-xl border border-input bg-background px-4 py-3 text-foreground outline-none ring-ring focus:ring-2"
-                  />
-                </div>
-                <div>
                   <p className="mb-1.5 block text-sm font-semibold">Кількість</p>
                   <div className="flex gap-2">
-                    {[1, 2, 3].map((n) => (
+                    {[1, 2, 5].map((n) => (
                       <button
                         key={n}
                         type="button"
@@ -584,11 +579,15 @@ function Index() {
                       >
                         <span className="font-display font-bold">{n} шт</span>
                         <span className="block text-xs opacity-80">
-                          {qty === n ? "обрано" : `${198 * n} ₴`}
+                          {pricePer(n)} ₴/шт
                         </span>
                       </button>
                     ))}
                   </div>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Чим більше берете — тим{" "}
+                    <span className="hl">нижча ціна кожного клапана</span>
+                  </p>
                 </div>
                 {error && (
                   <p className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
@@ -597,7 +596,7 @@ function Index() {
                 )}
                 <button type="submit" className="cta-btn w-full !text-xl">
                   <Phone className="h-6 w-6" />
-                  Замовити — 198 ₴ × {qty} шт
+                  Замовити — {total} ₴ за {qty} шт
                 </button>
                 <p className="flex items-center justify-center gap-2 pt-1 text-center text-xs text-muted-foreground">
                   <ShieldCheck className="h-4 w-4 text-primary" />
