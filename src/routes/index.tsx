@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 import valveProduct from "@/assets/valve-product.webp.asset.json";
+import { useServerFn } from "@tanstack/react-start";
+import { sendOrder } from "@/lib/order.functions";
 import valveInstallDemo from "@/assets/valve-install-demo.gif.asset.json";
 import valveOdorDemo from "@/assets/valve-odor-demo.gif.asset.json";
 
@@ -130,22 +132,37 @@ function Index() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [qty, setQty] = useState(1);
+  const [custom, setCustom] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const sendOrderFn = useServerFn(sendOrder);
 
   // чим більше штук — тим дешевше кожен клапан
-  const pricePer = (n: number) => (n >= 5 ? 199 : n === 2 ? 250 : 299);
+  const pricePer = (n: number) => (n >= 5 ? 199 : n >= 2 ? 250 : 299);
   const total = pricePer(qty) * qty;
 
-
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || phone.trim().length < 9) {
       setError("Будь ласка, вкажіть ім'я та коректний номер телефону");
       return;
     }
+    if (!Number.isInteger(qty) || qty < 1) {
+      setError("Вкажіть кількість");
+      return;
+    }
     setError("");
-    setSent(true);
+    setSending(true);
+    try {
+      const r = await sendOrderFn({ data: { name, phone, qty, total } });
+      if (!r.ok) throw new Error();
+      setSent(true);
+    } catch {
+      setError("Не вдалося надіслати замовлення. Спробуйте ще раз або зателефонуйте нам.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -565,14 +582,17 @@ function Index() {
                 </div>
                 <div>
                   <p className="mb-1.5 block text-sm font-semibold">Кількість</p>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     {[1, 2, 5].map((n) => (
                       <button
                         key={n}
                         type="button"
-                        onClick={() => setQty(n)}
-                        className={`flex-1 rounded-xl border px-4 py-3 text-center transition-colors ${
-                          qty === n
+                        onClick={() => {
+                          setCustom(false);
+                          setQty(n);
+                        }}
+                        className={`rounded-xl border px-2 py-3 text-center transition-colors ${
+                          !custom && qty === n
                             ? "border-primary bg-primary text-primary-foreground"
                             : "border-border bg-background text-foreground hover:border-primary/50"
                         }`}
@@ -583,7 +603,39 @@ function Index() {
                         </span>
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustom(true);
+                        setQty(qty > 5 ? qty : 6);
+                      }}
+                      className={`rounded-xl border px-2 py-3 text-center transition-colors ${
+                        custom
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-foreground hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="font-display font-bold">5+ шт</span>
+                      <span className="block text-xs opacity-80">199 ₴/шт</span>
+                    </button>
                   </div>
+                  {custom && (
+                    <div className="mt-3">
+                      <label className="mb-1.5 block text-sm font-semibold" htmlFor="qty">
+                        Ваша кількість (шт)
+                      </label>
+                      <input
+                        id="qty"
+                        type="number"
+                        min={6}
+                        max={1000}
+                        inputMode="numeric"
+                        value={Number.isNaN(qty) ? "" : qty}
+                        onChange={(e) => setQty(Math.min(1000, parseInt(e.target.value, 10)))}
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none focus:border-primary"
+                      />
+                    </div>
+                  )}
                   <p className="mt-2 text-center text-xs text-muted-foreground">
                     Чим більше берете — тим{" "}
                     <span className="hl">нижча ціна кожного клапана</span>
@@ -594,9 +646,9 @@ function Index() {
                     {error}
                   </p>
                 )}
-                <button type="submit" className="cta-btn w-full !text-xl">
+                <button type="submit" disabled={sending} className="cta-btn w-full !text-xl disabled:opacity-70">
                   <Phone className="h-6 w-6" />
-                  Замовити — {total} ₴ за {qty} шт
+                  {sending ? "Надсилаємо..." : `Замовити — ${Number.isNaN(total) ? 0 : total} ₴ за ${Number.isNaN(qty) ? 0 : qty} шт`}
                 </button>
                 <p className="flex items-center justify-center gap-2 pt-1 text-center text-xs text-muted-foreground">
                   <ShieldCheck className="h-4 w-4 text-primary" />
