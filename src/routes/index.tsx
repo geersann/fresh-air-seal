@@ -176,7 +176,9 @@ function Index() {
               Хіт продажів 2026
             </div>
             <h1 className="font-display text-4xl leading-tight font-black md:text-6xl">
-              Запах з каналізації <span className="hl-mark">зникне за 10 секунд</span> — без сантехніка
+              Запах з каналізації{" "}
+              <span className="hl">зникне за 10 секунд</span> — без
+              сантехніка
             </h1>
             <p className="mt-5 text-lg text-muted-foreground md:text-xl">
               <strong className="text-foreground">Силіконовий зворотний клапан</strong> пропускає
